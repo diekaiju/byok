@@ -15,7 +15,29 @@
 
 **BYOK** is an ultra-fast, zero-backend, single-file AI workspace that runs entirely in your browser. Connect directly to state-of-the-art AI models using your own API keys, save your conversations and notes as plain Markdown files into a local Obsidian-compatible vault, and convert complex documents client-side using WebAssembly—all with complete privacy.
 
-[Features](#-key-features) • [Supported Providers](#-supported-providers) • [Getting Started](#-getting-started) • [Storage Architecture](#-storage-architecture) • [Security & Privacy](#-security--privacy) • [PWA & Mobile](#-pwa--mobile-experience)
+[Features](#-key-features) • [Screenshots](#-interface-preview) • [Supported Providers](#-supported-providers) • [Getting Started](#-getting-started) • [Storage Architecture](#-storage-architecture) • [Security & Privacy](#-security--privacy) • [PWA & Mobile](#-pwa--mobile-experience)
+
+</div>
+
+---
+
+## 📸 Interface Preview
+
+<div align="center">
+
+### Desktop AI Workspace & Local Obsidian-Style Notes
+![BYOK Desktop Interface](img.png)
+
+<br/>
+
+| Mobile PWA Experience | Provider & Model Configuration |
+| :---: | :---: |
+| <img src="img2.png" alt="Mobile Experience" width="280" /> | <img src="img3.png" alt="Models & Providers" width="540" /> |
+
+<br/>
+
+### Vault & Settings View
+![Vault & Settings](img4.png)
 
 </div>
 
