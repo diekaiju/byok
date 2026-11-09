@@ -2,10 +2,12 @@
 <html lang="en">
 
 <head>
-  <link rel="manifest" href="./manifest.json">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b1020" />
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" href="./byok-192.png" />
+  <link rel="apple-touch-icon" href="./byok-192.png" />
   <!-- Rich Markdown rendering libraries (pinned versions). -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.12.0/styles/github-dark.min.css"
     crossorigin="anonymous" />
@@ -4110,31 +4112,34 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      padding: 12px 9px 6px
+      gap: 8px;
+      padding: 8px 9px 5px
     }
 
     .vault-meta-copy {
       min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 3px
+      gap: 2px
     }
 
     .vault-meta-copy b {
-      font-size: 20px;
-      font-weight: 650
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 600
     }
 
     .vault-meta-copy small {
-      font-size: 12px;
-      color: #aaa;
+      font-size: 10px;
+      line-height: 1.35;
+      color: #999;
       overflow-wrap: anywhere
     }
 
     .vault-settings-btn {
-      width: 48px;
-      height: 48px;
+      width: 36px;
+      height: 36px;
+      flex: 0 0 36px;
       border: 0;
       border-radius: 50%;
       background: #333;
@@ -4144,8 +4149,8 @@
     }
 
     .vault-settings-btn svg {
-      width: 22px;
-      height: 22px
+      width: 18px;
+      height: 18px
     }
 
     .sidebar-provider-link {
@@ -4458,21 +4463,6 @@
 
     .app.reader-chrome-hidden .reader-restore {
       display: flex
-    }
-
-    .app.reader-chrome-hidden .sidebar {
-      width: 0 !important;
-      padding-left: 0 !important;
-      padding-right: 0 !important;
-      border: 0 !important;
-      opacity: 0;
-      transform: translateX(-100%);
-      overflow: hidden;
-      pointer-events: none
-    }
-
-    .app.reader-chrome-hidden {
-      grid-template-columns: 0 minmax(0, 1fr) !important
     }
 
     .reader-wrap .composer-area {
@@ -5178,13 +5168,6 @@
         top: calc(9px + env(safe-area-inset-top, 0px));
         right: 10px
       }
-
-      .app.reader-chrome-hidden .sidebar {
-        transform: translateX(-103%);
-        width: min(350px, 89vw) !important;
-        opacity: 1;
-        pointer-events: auto
-      }
     }
 
     @media(max-width:380px) {
@@ -5889,6 +5872,68 @@
         visibility: visible !important;
       }
     }
+
+    /* Manual-only sidebar visibility: scrolling never hides the file explorer. */
+    @media (min-width:651px) {
+      .mobile-menu {
+        display: grid !important;
+      }
+
+      .sidebar-close {
+        display: grid !important;
+      }
+
+      .app.sidebar-manually-hidden {
+        grid-template-columns: 0 minmax(0, 1fr) !important;
+      }
+
+      .app.sidebar-manually-hidden>.sidebar {
+        width: 0 !important;
+        min-width: 0 !important;
+        max-width: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        border: 0 !important;
+        opacity: 0;
+        transform: translateX(-12px);
+        overflow: hidden !important;
+        pointer-events: none !important;
+      }
+
+      .sidebar {
+        transition: width .2s ease, opacity .18s ease, transform .2s ease, padding .2s ease;
+      }
+    }
+
+    /* Vault metadata is secondary information; keep it compact in the explorer footer. */
+    .sidebar-vault-meta .vault-meta-copy b {
+      font-size: 13px !important;
+    }
+
+    .sidebar-vault-meta .vault-meta-copy small {
+      font-size: 10px !important;
+    }
+
+    @media (max-width:650px) {
+      .sidebar-vault-meta {
+        padding: 7px 8px 4px;
+        gap: 7px;
+      }
+
+      .sidebar-vault-meta .vault-meta-copy b {
+        font-size: 12px !important;
+      }
+
+      .sidebar-vault-meta .vault-meta-copy small {
+        font-size: 9.5px !important;
+      }
+
+      .sidebar-vault-meta .vault-settings-btn {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+      }
+    }
   </style>
 </head>
 
@@ -6378,6 +6423,27 @@
     function active() { return state.chats.find(c => c.id === state.activeId) }
     function syncNavigation(view = state.view) { const target = view === 'chat' ? 'chats' : view; $$('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === target)); $$('#mobileNav button').forEach(b => b.classList.toggle('active', b.dataset.view === target)); $$('.sidebar-support-link').forEach(b => b.classList.toggle('active', target === 'support')); }
     function closeSidebar() { $('#sidebar').classList.remove('open'); $('#scrim').classList.remove('show'); $('#menuBtn').setAttribute('aria-expanded', 'false'); }
+    function isMobileSidebar() { return window.matchMedia('(max-width:650px)').matches; }
+    function updateSidebarToggleState() {
+      const hidden = $('.app')?.classList.contains('sidebar-manually-hidden');
+      const expanded = isMobileSidebar() ? $('#sidebar')?.classList.contains('open') : !hidden;
+      const menu = $('#menuBtn');
+      if (menu) { menu.setAttribute('aria-expanded', String(!!expanded)); menu.setAttribute('aria-label', expanded ? 'Hide file explorer' : 'Show file explorer'); menu.title = expanded ? 'Hide file explorer' : 'Show file explorer'; }
+    }
+    function toggleWorkspaceSidebar() {
+      const app = $('.app'), side = $('#sidebar'); if (!app || !side) return;
+      if (isMobileSidebar()) {
+        const opening = !side.classList.contains('open');
+        side.classList.toggle('open', opening); $('#scrim').classList.toggle('show', opening);
+      } else {
+        app.classList.toggle('sidebar-manually-hidden');
+      }
+      updateSidebarToggleState(); playFeedback('modal');
+    }
+    function hideWorkspaceSidebar() {
+      if (isMobileSidebar()) closeSidebar();
+      else { $('.app')?.classList.add('sidebar-manually-hidden'); updateSidebarToggleState(); playFeedback('back'); }
+    }
     function navSnapshot() { return { view: state.view, activeId: state.activeId, folder: state.folder, filter: state.filter }; }
     function pushScreenState(snapshot) { try { history.replaceState({ ...(history.state || {}), __byok: true, byokScreen: navSnapshot() }, '', location.href); history.pushState({ __byok: true, byokScreen: snapshot }, '', location.href); } catch (error) { console.warn('Navigation history unavailable:', error) } }
     function initializeNavigationHistory(snapshot) { try { const root = { __byok: true, byokRoot: true, byokScreen: snapshot }; history.replaceState(root, '', location.href); history.pushState(root, '', location.href); } catch (error) { console.warn('Navigation history unavailable:', error) } }
@@ -6415,7 +6481,7 @@
   <div class="composer-area"><div class="attachment-strip" id="attachmentStrip"></div><div class="composer"><textarea id="composerInput" rows="1" placeholder="Message BYOK…"></textarea><div class="composer-bottom"><div class="composer-left"><button class="icon-btn" id="attachBtn" title="Attach files"><i data-lucide="paperclip"></i></button><span class="statusline" id="providerHint">Connect an AI provider to start</span></div><div class="composer-right"><button class="send" id="sendBtn" title="Send"><i data-lucide="arrow-up"></i></button></div></div></div><div class="composer-hint">Enter to send · Shift+Enter for a new line</div></div>
  </div>`;
       renderIcons(host); bindChat(); renderChat();
-      $('#readerSidebarToggle').onclick = () => { const side = $('#sidebar'); side.classList.add('open'); $('#scrim').classList.add('show'); $('#menuBtn')?.setAttribute('aria-expanded', 'true'); playFeedback('modal'); };
+      $('#readerSidebarToggle').onclick = toggleWorkspaceSidebar;
       $('#readerBack').onclick = () => { if (history.state?.byokScreen) history.back(); else setView('chats') };
       $('#readerSearch').onclick = () => searchCurrentDocument(record);
       $('#readerNew').onclick = () => createChat();
@@ -6430,7 +6496,7 @@
   <div class="reader-dock note-dock" id="readerDock"><button id="readerBack" aria-label="Back"><i data-lucide="arrow-left"></i></button><button id="notePreviewSearch" aria-label="Find in note"><i data-lucide="search"></i></button><button id="noteEdit" aria-label="${editing ? 'Save note' : 'Edit note'}"><i data-lucide="${editing ? 'check' : 'pencil'}"></i></button><button id="noteExport" aria-label="Export Markdown"><i data-lucide="download"></i></button></div>
  </div>`;
       renderIcons(host); enhanceMarkdown($('#noteContentScroll'));
-      $('#readerSidebarToggle').onclick = () => { $('#sidebar').classList.add('open'); $('#scrim').classList.add('show'); $('#menuBtn')?.setAttribute('aria-expanded', 'true'); playFeedback('modal') };
+      $('#readerSidebarToggle').onclick = toggleWorkspaceSidebar;
       $('#readerBack').onclick = () => { if (history.state?.byokScreen) history.back(); else setView('notes') };
       $('#chatMore').onclick = () => recordMenu(c);
       const toggleNoteMode = async () => {
@@ -7031,7 +7097,7 @@
       } else if (id === 'appearance') {
         html += `<div class="settings-group-label">Theme</div><div class="settings-group">${row('Color theme', 'Choose the interface appearance.', `<select class="settings-select" id="prefTheme"><option value="dark" ${uiPrefs.theme === 'dark' ? 'selected' : ''}>Dark</option><option value="light" ${uiPrefs.theme === 'light' ? 'selected' : ''}>Light</option></select>`)}${row('Typeface', 'Choose the reading and interface font.', `<select class="settings-select" id="prefFont"><option value="system" ${uiPrefs.fontFamily === 'system' ? 'selected' : ''}>System / Inter</option><option value="serif" ${uiPrefs.fontFamily === 'serif' ? 'selected' : ''}>Serif</option><option value="mono" ${uiPrefs.fontFamily === 'mono' ? 'selected' : ''}>Monospace</option></select>`)}</div><div class="settings-group-label">Reading</div><div class="settings-group">${row('Reading font size', `Currently ${uiPrefs.fontSize}px. The default is 16px.`, `<div class="font-size-control"><input id="prefFontSize" type="range" min="14" max="24" step="1" value="${uiPrefs.fontSize}"><output id="prefFontSizeValue">${uiPrefs.fontSize}px</output></div>`)}${row('Reading preview', 'A sample of your document typography.', `<div class="type-preview" id="typePreview">Aa · The quick brown fox jumps over the lazy dog.</div>`)}</div>`;
       } else if (id === 'interface') {
-        html += `<div class="settings-group-label">Reading experience</div><div class="settings-group">${row('Hide controls while reading', 'Scrolling down hides the app chrome. Scrolling up reveals it.', `<input class="settings-switch" id="prefReaderAutoHide" type="checkbox" ${uiPrefs.readerAutoHide ? 'checked' : ''}>`)}${row('Compact message composer', 'Shrink the composer while reading and expand it when tapped.', `<input class="settings-switch" id="prefCompactComposer" type="checkbox" ${uiPrefs.compactComposer ? 'checked' : ''}>`)}</div><div class="settings-group-label">Sound and touch</div><div class="settings-group">${row('Interaction sounds', 'Soft taps when opening screens and menus.', `<input class="settings-switch" id="feedbackSound" type="checkbox" ${feedbackPrefs.sound ? 'checked' : ''}>`)}${row('Scroll ticks', 'Subtle feedback during manual scrolling.', `<input class="settings-switch" id="feedbackScroll" type="checkbox" ${feedbackPrefs.scroll ? 'checked' : ''}>`)}${row('Haptic feedback', 'Vibration on supported Android browsers.', `<input class="settings-switch" id="feedbackHaptics" type="checkbox" ${feedbackPrefs.haptics ? 'checked' : ''}>`)}${row('Sound volume', 'Adjust the interaction sound level.', `<div class="font-size-control"><input id="feedbackVolume" type="range" min="0" max="100" value="${Math.round(feedbackPrefs.volume * 100)}"><output id="feedbackVolumeValue">${Math.round(feedbackPrefs.volume * 100)}%</output></div>`)}</div><div class="settings-inline-actions">${button('previewFeedback', 'Preview feedback', 'volume-2')}</div>`;
+        html += `<div class="settings-group-label">Reading experience</div><div class="settings-group">${row('Hide reading toolbar while scrolling', 'Scrolling down hides the document toolbar. The file sidebar stays visible until you close it manually.', `<input class="settings-switch" id="prefReaderAutoHide" type="checkbox" ${uiPrefs.readerAutoHide ? 'checked' : ''}>`)}${row('Compact message composer', 'Shrink the composer while reading and expand it when tapped.', `<input class="settings-switch" id="prefCompactComposer" type="checkbox" ${uiPrefs.compactComposer ? 'checked' : ''}>`)}</div><div class="settings-group-label">Sound and touch</div><div class="settings-group">${row('Interaction sounds', 'Soft taps when opening screens and menus.', `<input class="settings-switch" id="feedbackSound" type="checkbox" ${feedbackPrefs.sound ? 'checked' : ''}>`)}${row('Scroll ticks', 'Subtle feedback during manual scrolling.', `<input class="settings-switch" id="feedbackScroll" type="checkbox" ${feedbackPrefs.scroll ? 'checked' : ''}>`)}${row('Haptic feedback', 'Vibration on supported Android browsers.', `<input class="settings-switch" id="feedbackHaptics" type="checkbox" ${feedbackPrefs.haptics ? 'checked' : ''}>`)}${row('Sound volume', 'Adjust the interaction sound level.', `<div class="font-size-control"><input id="feedbackVolume" type="range" min="0" max="100" value="${Math.round(feedbackPrefs.volume * 100)}"><output id="feedbackVolumeValue">${Math.round(feedbackPrefs.volume * 100)}%</output></div>`)}</div><div class="settings-inline-actions">${button('previewFeedback', 'Preview feedback', 'volume-2')}</div>`;
       } else if (id === 'editor') {
         html += `<div class="settings-group-label">Markdown editor</div><div class="settings-group">${row('Autosave notes', 'Save edits automatically after a short pause.', `<input class="settings-switch" id="prefAutoSave" type="checkbox" ${uiPrefs.autoSave ? 'checked' : ''}>`)}${row('Spell check', 'Use the browser spell checker in the note editor.', `<input class="settings-switch" id="prefSpellcheck" type="checkbox" ${uiPrefs.spellcheck ? 'checked' : ''}>`)}${row('New notes open in', 'Choose the initial note mode.', `<select class="settings-select" id="prefNoteView"><option value="read" ${uiPrefs.defaultNoteView === 'read' ? 'selected' : ''}>Reading view</option><option value="edit" ${uiPrefs.defaultNoteView === 'edit' ? 'selected' : ''}>Editor</option></select>`)}</div><div class="settings-note">BYOK uses Marked for Markdown, DOMPurify to sanitize rendered HTML, Highlight.js for code and KaTeX for equations.</div>`;
       } else if (id === 'files') {
@@ -7072,8 +7138,8 @@
     $('#vaultFolderImportInput').addEventListener('change', async e => { await importVaultFolderFiles(e.target.files); e.target.value = '' });
     $('#vaultZipImportInput').addEventListener('change', async e => { await importVaultZip(e.target.files?.[0]); e.target.value = '' });
     $('#newChat').onclick = () => { playFeedback('tap'); createChat() }; $('#quickNote').onclick = () => { playFeedback('tap'); createNote() }; $('#topNewNote')?.addEventListener('click', () => { playFeedback('tap'); createNote() });
-    $('#sidebarClose').onclick = closeSidebar; $('#sidebarVault').onclick = () => pickVault(); $('#treeSearch').oninput = () => renderFolders(); $('#treeSort').onclick = () => { treeSortRecent = !treeSortRecent; renderFolders(); toast(treeSortRecent ? 'Sorted by recent activity' : 'Sorted by name') }; $('#collapseFolders').onclick = () => { expandedFolders.clear(); renderFolders() }; $('#mobileNewChat').onclick = () => { playFeedback('tap'); state.view === 'notes' ? createNote() : createChat() }; $('#topSettings').onclick = () => setView('settings'); $('#addFolder').onclick = () => { playFeedback('tap'); addFolder() };
-    $('#menuBtn').onclick = () => { const isOpen = $('#sidebar').classList.contains('open'); if (isOpen) { closeSidebar(); } else { $('#sidebar').classList.add('open'); $('#scrim').classList.add('show'); $('#menuBtn').setAttribute('aria-expanded', 'true'); playFeedback('modal'); } };
+    $('#sidebarClose').onclick = hideWorkspaceSidebar; $('#sidebarVault').onclick = () => pickVault(); $('#treeSearch').oninput = () => renderFolders(); $('#treeSort').onclick = () => { treeSortRecent = !treeSortRecent; renderFolders(); toast(treeSortRecent ? 'Sorted by recent activity' : 'Sorted by name') }; $('#collapseFolders').onclick = () => { expandedFolders.clear(); renderFolders() }; $('#mobileNewChat').onclick = () => { playFeedback('tap'); state.view === 'notes' ? createNote() : createChat() }; $('#topSettings').onclick = () => setView('settings'); $('#addFolder').onclick = () => { playFeedback('tap'); addFolder() };
+    $('#menuBtn').onclick = toggleWorkspaceSidebar; updateSidebarToggleState();
     $('#scrim').onclick = () => { closeSidebar(); playFeedback('back') };
     document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); $('#globalSearch')?.focus(); } if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n' && !e.shiftKey) { e.preventDefault(); createChat(); } if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'n') { e.preventDefault(); createNote(); } });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeSidebar(); closeModal(); playFeedback('back') } });
